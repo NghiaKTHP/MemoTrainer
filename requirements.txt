@@ -1,0 +1,3 @@
+PyQt6>=6.6.0
+PyYAML>=6.0
+memolib==1.1.3

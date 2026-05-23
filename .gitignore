@@ -20,6 +20,7 @@ build/
 # Runtime output
 Logs/
 Configs/
+TrainResult/
 
 # IDE
 .vscode/
