@@ -1,5 +1,0 @@
-Task: detect
-Architecture: RFDETRNano
-Resolution: 384
-Device: cuda
-Classes: 17
