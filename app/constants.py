@@ -1,0 +1,83 @@
+TASK_MODELS = {
+    "Classify": ["PPLCNet", "YOLO-Cls", "EfficientNet"],
+    "Detect":   ["YOLO-Det", "RFDETR-Det"],
+    "Segment":  ["YOLO-Seg", "DinoUperNet", "RFDETR-Seg"],
+}
+
+# model_module / model_class must match actual class names in memolib
+MODEL_INFO = {
+    "PPLCNet": {
+        "config_module":    "MemoLib.Model.PPLCNet.PPLCNetConfig",
+        "config_class":     "TrainingConfig",
+        "model_module":     "MemoLib.Model.PPLCNet.PPLCNetModel",
+        "model_class":      "PPLCNet",
+        "arch_enum_module": "MemoLib.Model.BaseModel.eClassificationModel",
+        "arch_enum_class":  "ePPLCNetModel",
+        "fixed_fields":     {},
+    },
+    "YOLO-Cls": {
+        "config_module":    "MemoLib.Model.YOLO.YoloConfig",
+        "config_class":     "TrainingConfig",
+        "model_module":     "MemoLib.Model.YOLO.YoloModel",
+        "model_class":      "Yolo",
+        "arch_enum_module": "MemoLib.Model.BaseModel.eClassificationModel",
+        "arch_enum_class":  "eYoloClassificationModel",
+        "fixed_fields":     {"TaskType": "classify"},
+    },
+    "EfficientNet": {
+        "config_module":    "MemoLib.Model.Efficientnet.EfficientNetConfig",
+        "config_class":     "TrainingConfig",
+        "model_module":     "MemoLib.Model.Efficientnet.EfficientNetModel",
+        "model_class":      "EfficientNet",
+        "arch_enum_module": "MemoLib.Model.BaseModel.eClassificationModel",
+        "arch_enum_class":  "eEfficientNetModel",
+        "fixed_fields":     {},
+    },
+    "YOLO-Det": {
+        "config_module":    "MemoLib.Model.YOLO.YoloConfig",
+        "config_class":     "TrainingConfig",
+        "model_module":     "MemoLib.Model.YOLO.YoloModel",
+        "model_class":      "Yolo",
+        "arch_enum_module": "MemoLib.Model.BaseModel.eDetectionModel",
+        "arch_enum_class":  "eYoloDetectionModel",
+        "fixed_fields":     {"TaskType": "detect"},
+    },
+    "RFDETR-Det": {
+        "config_module":    "MemoLib.Model.RFDETR.RFDETRConfig",
+        "config_class":     "TrainingConfig",
+        "model_module":     "MemoLib.Model.RFDETR.RFDETRModel",
+        "model_class":      "RFDETRModel",
+        "arch_enum_module": "MemoLib.Model.BaseModel.eDetectionModel",
+        "arch_enum_class":  "eRFDetrDetectionModel",
+        "fixed_fields":     {"TaskType": "detect"},
+    },
+    "YOLO-Seg": {
+        "config_module":    "MemoLib.Model.YOLO.YoloConfig",
+        "config_class":     "TrainingConfig",
+        "model_module":     "MemoLib.Model.YOLO.YoloModel",
+        "model_class":      "Yolo",
+        "arch_enum_module": "MemoLib.Model.BaseModel.eSegmentationModel",
+        "arch_enum_class":  "eYoloSegmentationModel",
+        "fixed_fields":     {"TaskType": "segment"},
+    },
+    "DinoUperNet": {
+        "config_module":    "MemoLib.Model.DinoUperNet.DinoUperNetConfig",
+        "config_class":     "TrainingConfig",
+        "model_module":     "MemoLib.Model.DinoUperNet.DinoUperNet",
+        "model_class":      "DinoUperNet",
+        "arch_enum_module": "MemoLib.Model.BaseModel.eSegmentationModel",
+        "arch_enum_class":  "eDinoUperNetModel",
+        "fixed_fields":     {},
+    },
+    "RFDETR-Seg": {
+        "config_module":    "MemoLib.Model.RFDETR.RFDETRConfig",
+        "config_class":     "TrainingConfig",
+        "model_module":     "MemoLib.Model.RFDETR.RFDETRModel",
+        "model_class":      "RFDETRModel",
+        "arch_enum_module": "MemoLib.Model.BaseModel.eDetectionModel",
+        "arch_enum_class":  "eRFDetrDetectionModel",
+        "fixed_fields":     {"TaskType": "segment"},
+    },
+}
+
+TRAIN_RESULT_DIR = "TrainResult"
