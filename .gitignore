@@ -6,6 +6,7 @@ __pycache__/
 *.egg-info/
 *.egg
 .eggs/
+build.py
 
 # Virtual environment
 venv/
@@ -16,17 +17,23 @@ env/
 dist/
 build/
 *.spec
+MemoTrainer.spec
 
 # Runtime output
 Logs/
 Configs/
 TrainResult/
 
+# Dataset
+project-6-at-2026-05-26-16-17-15bff79a
+
+
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+.claude
 
 # OS
 .DS_Store

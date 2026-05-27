@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(venv\\\\Scripts\\\\python.exe build.py)",
+      "Bash(ls \"D:/Nghia/Python-Workspace/MemoLibV2/dataset/\" 2>/dev/null || echo \"Directory not found\")",
+      "Read(//d/Nghia/Python-Workspace/MemoLibV2/dataset/**)",
+      "Bash(python -c \"from ultralytics.utils.downloads import attempt_download_asset; print\\('ok'\\)\")",
+      "Bash(python -c ' *)",
+      "Read(//d/Nghia/Python-Workspace/MemoLibV2/**)",
+      "Read(//d/Nghia/Python-Workspace/MemoLib/Model/YOLO/**)",
+      "Bash(dir \"D:\\\\Nghia\\\\Python-Workspace\\\\MemoLibV2\")"
+    ],
+    "additionalDirectories": [
+      "D:\\Nghia\\Python-Workspace\\MemoLibV2\\MemoLib\\Model\\DinoUperNet",
+      "D:\\Nghia\\Python-Workspace\\MemoLibV2\\MemoLib\\Model\\RFDETR",
+      "D:\\Nghia\\Python-Workspace\\MemoLibV2\\MemoLib\\Model\\YOLO",
+      "D:\\Nghia\\Python-Workspace\\MemoLibV2\\MemoLib\\Model\\BaseModel",
+      "D:\\Nghia\\Python-Workspace\\MemoLibV2"
+    ]
+  }
+}
