@@ -128,6 +128,12 @@ class LogPanel(QWidget):
 
     @pyqtSlot(str, str)
     def append_log(self, level: str, message: str):
+        # Metric updates: parse key=value pairs, update chips, skip text log
+        if level == "Metric":
+            for m in re.finditer(r'(\S+?)=([\d.]+)', message):
+                self.update_metric(m.group(1), m.group(2))
+            return
+
         timestamp = datetime.now().strftime("%H:%M:%S")
         color = _LOG_COLORS.get(level.lower(), _LOG_COLORS["default"])
         line = f"[{timestamp}] {message}"
@@ -163,8 +169,6 @@ class LogPanel(QWidget):
                 self._log_edit.verticalScrollBar().maximum()
             )
 
-        self._parse_metrics(message)
-
     @pyqtSlot(str)
     def append_stdout(self, line: str):
         self.append_log("default", line)
@@ -172,28 +176,6 @@ class LogPanel(QWidget):
     def update_metric(self, key: str, value: str):
         self._metrics[key] = value
         self._rebuild_metrics_bar()
-
-    # ── Metric parsing ───────────────────────────────────────────────
-
-    _METRIC_PATTERNS = [
-        (r"[Ee]poch[:\s]+(\d+)/(\d+)", "epoch", "{0}/{1}"),
-        (r"[Ll]oss[:\s]+([\d.]+)",      "loss",  "{0}"),
-        (r"[Aa]cc(?:uracy)?[:\s]+([\d.]+%?)", "acc", "{0}"),
-        (r"mAP[:\s]+([\d.]+)",           "mAP",  "{0}"),
-        (r"[Ll][Rr][:\s]+([\d.e+-]+)",   "lr",   "{0}"),
-    ]
-
-    def _parse_metrics(self, message: str):
-        updated = False
-        for pattern, key, fmt in self._METRIC_PATTERNS:
-            m = re.search(pattern, message)
-            if m:
-                val = fmt.format(*m.groups())
-                if self._metrics.get(key) != val:
-                    self._metrics[key] = val
-                    updated = True
-        if updated:
-            self._rebuild_metrics_bar()
 
     def _rebuild_metrics_bar(self):
         while self._metrics_row.count() > 1:

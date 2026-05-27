@@ -23,6 +23,7 @@ MODEL_INFO = {
         "arch_enum_module": "MemoLib.Model.BaseModel.eClassificationModel",
         "arch_enum_class":  "eYoloClassificationModel",
         "fixed_fields":     {"TaskType": "classify"},
+        "default_arch":     "Yolo11n",
     },
     "EfficientNet": {
         "config_module":    "MemoLib.Model.Efficientnet.EfficientNetConfig",
@@ -41,6 +42,7 @@ MODEL_INFO = {
         "arch_enum_module": "MemoLib.Model.BaseModel.eDetectionModel",
         "arch_enum_class":  "eYoloDetectionModel",
         "fixed_fields":     {"TaskType": "detect"},
+        "default_arch":     "Yolo11n",
     },
     "RFDETR-Det": {
         "config_module":    "MemoLib.Model.RFDETR.RFDETRConfig",
@@ -59,6 +61,7 @@ MODEL_INFO = {
         "arch_enum_module": "MemoLib.Model.BaseModel.eSegmentationModel",
         "arch_enum_class":  "eYoloSegmentationModel",
         "fixed_fields":     {"TaskType": "segment"},
+        "default_arch":     "Yolo11n",
     },
     "DinoUperNet": {
         "config_module":    "MemoLib.Model.DinoUperNet.DinoUperNetConfig",

@@ -1,8 +1,11 @@
+import multiprocessing
 import os
 import sys
 from pathlib import Path
 
-# Add memolib venv site-packages to path (already active when run via venv python)
+# Prevent Ultralytics from auto-installing packages via subprocess (spawns visible cmd.exe on Windows)
+os.environ["ULTRALYTICS_SKIP_REQUIREMENTS_CHECKS"] = "1"
+
 _WORKSPACE = Path(__file__).parent
 os.chdir(_WORKSPACE)  # ensure TrainResult/ is relative to project root
 
@@ -22,4 +25,5 @@ def main():
 
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     main()

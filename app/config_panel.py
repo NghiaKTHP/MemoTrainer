@@ -392,7 +392,11 @@ class ConfigPanel(QWidget):
                 pass
 
         try:
-            first_arch = list(arch_enum_cls)[0]
+            default_arch_name = info.get("default_arch")
+            if default_arch_name:
+                first_arch = arch_enum_cls[default_arch_name]
+            else:
+                first_arch = list(arch_enum_cls)[0]
             setattr(self._cfg_instance, "Architecture", first_arch)
         except Exception:
             pass
@@ -570,9 +574,23 @@ class ConfigPanel(QWidget):
     def _on_start(self):
         if not self._model_name:
             return
-        self.start_requested.emit(self.get_config_dict(), self._model_name)
+        config = self.get_config_dict()
+        if "DatasetPath" in config and not config["DatasetPath"]:
+            QMessageBox.warning(
+                self, "Missing Configuration",
+                "DatasetPath is empty.\nPlease enter the path to your dataset directory."
+            )
+            return
+        self.start_requested.emit(config, self._model_name)
 
     def _on_queue(self):
         if not self._model_name:
             return
-        self.queue_requested.emit(self.get_config_dict(), self._model_name)
+        config = self.get_config_dict()
+        if "DatasetPath" in config and not config["DatasetPath"]:
+            QMessageBox.warning(
+                self, "Missing Configuration",
+                "DatasetPath is empty.\nPlease enter the path to your dataset directory."
+            )
+            return
+        self.queue_requested.emit(config, self._model_name)

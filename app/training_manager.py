@@ -1,5 +1,6 @@
 import gc
 import importlib
+import re
 import sys
 import threading
 from enum import Enum
@@ -8,6 +9,8 @@ from typing import Optional
 from PyQt6.QtCore import QObject, QThread, pyqtSignal
 
 from .constants import MODEL_INFO
+
+_ANSI_RE = re.compile(r'\x1b(?:\[[0-9;]*[A-Za-z]|\].*?(?:\x07|\x1b\\))')
 
 
 class _StdoutCapture:
@@ -21,14 +24,21 @@ class _StdoutCapture:
             self._buf += text
             while "\n" in self._buf:
                 line, self._buf = self._buf.split("\n", 1)
-                if line.strip():
-                    self._cb(line)
+                # tqdm TTY mode: multiple \r overwrites accumulate before \n —
+                # keep only the final overwrite (what the terminal would display)
+                if "\r" in line:
+                    line = line.rsplit("\r", 1)[1]
+                clean = _ANSI_RE.sub("", line).strip()
+                if clean:
+                    self._cb(clean)
 
     def flush(self):
         pass
 
     def isatty(self):
-        return False
+        # Return True so tqdm/rich uses \r overwrite mode instead of printing
+        # a new line per batch update — we collapse \r-separated updates above.
+        return True
 
 
 class JobStatus:
@@ -86,6 +96,10 @@ class TrainingWorker(QThread):
                     setattr(cfg, k, v)
                 except Exception:
                     pass
+
+            # Log key config values for diagnosis
+            _dp = self.job.config_dict.get("DatasetPath", "<missing>")
+            self.log_signal.emit("Info", f"[Worker] DatasetPath = '{_dp}'")
 
             # Apply user config
             for key, val in self.job.config_dict.items():
