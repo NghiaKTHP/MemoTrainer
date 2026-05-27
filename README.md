@@ -116,4 +116,12 @@ Configs are stored in `Configs/<ModelName>/` as YAML files. Use the **Save** but
 
 ## License
 
-MIT
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+### MIT License Permissions
+- ✅ Commercial use
+- ✅ Modification
+- ✅ Distribution
+- ✅ Private use
+
+**Condition**: Include a copy of the license and copyright notice.
