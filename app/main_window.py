@@ -1,8 +1,8 @@
 import importlib
 
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
-from PyQt6.QtWidgets import (QHBoxLayout, QLabel, QMainWindow, QPushButton,
-                              QTabWidget, QVBoxLayout, QWidget)
+from PyQt6.QtWidgets import (QHBoxLayout, QLabel, QMainWindow, QMessageBox,
+                              QPushButton, QTabWidget, QVBoxLayout, QWidget)
 
 from .constants import MODEL_INFO
 from .history_tab import HistoryTab
@@ -119,6 +119,16 @@ class MainWindow(QMainWindow):
             self._history_tab.refresh()
 
     def closeEvent(self, event):
+        reply = QMessageBox.question(
+            self,
+            "Confirm Exit",
+            "Are you sure you want to exit?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            event.ignore()
+            return
         self._manager.stop_current()
         self._train_tab._log.close_log_file()
         super().closeEvent(event)

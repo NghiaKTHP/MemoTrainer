@@ -2,6 +2,7 @@ TASK_MODELS = {
     "Classify": ["PPLCNet", "YOLO-Cls", "EfficientNet"],
     "Detect":   ["YOLO-Det", "RFDETR-Det"],
     "Segment":  ["YOLO-Seg", "DinoUperNet", "RFDETR-Seg"],
+    "Anomaly":  ["DinomalyV2"],
 }
 
 # model_module / model_class must match actual class names in memolib
@@ -80,6 +81,15 @@ MODEL_INFO = {
         "arch_enum_module": "MemoLib.Model.BaseModel.eDetectionModel",
         "arch_enum_class":  "eRFDetrDetectionModel",
         "fixed_fields":     {"TaskType": "segment"},
+    },
+    "DinomalyV2": {
+        "config_module":    "MemoLib.Model.Dinomaly.DinomalyConfig",
+        "config_class":     "TrainingConfig",
+        "model_module":     "MemoLib.Model.Dinomaly.DinomalyModel",
+        "model_class":      "DinomalyModel",
+        "arch_enum_module": "MemoLib.Model.BaseModel.eAnomalyModel",
+        "arch_enum_class":  "eDinomalyModel",
+        "fixed_fields":     {},
     },
 }
 
