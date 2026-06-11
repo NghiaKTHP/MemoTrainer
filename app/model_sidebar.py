@@ -8,6 +8,7 @@ _TASK_ICONS = {
     "Classify": "🏷",
     "Detect":   "🎯",
     "Segment":  "✂",
+    "Anomaly":  "🔍",
 }
 
 _SIDEBAR_STYLE = """

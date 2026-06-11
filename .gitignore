@@ -24,6 +24,8 @@ MemoTrainer.spec
 Logs/
 Configs/
 TrainResult/
+Test/
+backbones/
 
 # Dataset
 project-6-at-2026-05-26-16-17-15bff79a
