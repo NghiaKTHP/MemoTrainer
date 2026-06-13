@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (QHBoxLayout, QLabel, QMainWindow, QMessageBox,
                               QPushButton, QTabWidget, QVBoxLayout, QWidget)
 
 from .constants import MODEL_INFO
+from .convert_tab import ConvertTab
 from .history_tab import HistoryTab
 from .queue_bar import QueueBar
 from .train_tab import TrainTab
@@ -97,9 +98,11 @@ class MainWindow(QMainWindow):
 
         self._train_tab = TrainTab(self._manager)
         self._history_tab = HistoryTab(manager=self._manager)
+        self._convert_tab = ConvertTab()
 
         self._tabs.addTab(self._train_tab, "▶  Train")
         self._tabs.addTab(self._history_tab, "⏱  History")
+        self._tabs.addTab(self._convert_tab, "⚡  Convert")
 
         # Refresh history when switching to it
         self._tabs.currentChanged.connect(self._on_tab_changed)

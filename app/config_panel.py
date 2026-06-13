@@ -31,10 +31,16 @@ QLabel#changedBadge {
 }
 QLineEdit, QComboBox {
     font-size: 12px; padding: 3px 6px;
-    border: 1px solid #ddd; border-radius: 4px; background: #fff;
+    border: 1px solid #ddd; border-radius: 4px;
+    background: #fff; color: #111;
 }
 QLineEdit:focus, QComboBox:focus { border-color: #888; }
 QLineEdit:disabled, QComboBox:disabled { background: #f5f5f5; color: #aaa; }
+QComboBox QAbstractItemView {
+    background: #fff; color: #111;
+    selection-background-color: #1a6fb5; selection-color: #fff;
+}
+QCheckBox { color: #111; }
 QPushButton#toolBtn {
     font-size: 11px; padding: 4px 10px;
     border: 1px solid #ddd; border-radius: 6px;
@@ -293,6 +299,7 @@ class ConfigPanel(QWidget):
         self._default_cfg: dict = {}
         self._field_rows: dict[str, _FieldRow] = {}
         self._pending_load_data: dict | None = None
+        self._syncing = False  # guard against recursion in _propagate_change
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
@@ -474,6 +481,33 @@ class ConfigPanel(QWidget):
             if hasattr(self._cfg_instance, fname):
                 row.set_value(getattr(self._cfg_instance, fname))
 
+    def _propagate_change(self, fname: str, row: _FieldRow):
+        """Apply the changed field to cfg_instance, then sync any other UI rows
+        that the dataclass's __setattr__ may have updated as a side effect
+        (e.g. Dinomaly: Architecture change → Backbone auto-resolves)."""
+        if self._syncing or self._cfg_instance is None:
+            return
+        if not hasattr(self._cfg_instance, fname):
+            return
+
+        before = {f: getattr(self._cfg_instance, f, None) for f in self._field_rows}
+
+        try:
+            setattr(self._cfg_instance, fname, row.get_value())
+        except Exception:
+            return
+
+        self._syncing = True
+        try:
+            for f, r in self._field_rows.items():
+                if f == fname:
+                    continue
+                current = getattr(self._cfg_instance, f, None)
+                if current != before[f]:
+                    r.set_value(current)
+        finally:
+            self._syncing = False
+
     def _rebuild_form(self):
         while self._scroll_layout.count():
             item = self._scroll_layout.takeAt(0)
@@ -507,6 +541,8 @@ class ConfigPanel(QWidget):
                     browse=_browse_type(fname),
                 )
                 row.value_changed.connect(self.config_changed)
+                row.value_changed.connect(
+                    lambda f=fname, r=row: self._propagate_change(f, r))
                 group_widget.add_row(row)
                 self._field_rows[fname] = row
             self._scroll_layout.addWidget(group_widget)
