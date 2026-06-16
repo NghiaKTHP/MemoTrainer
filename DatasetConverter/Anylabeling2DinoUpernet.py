@@ -87,7 +87,8 @@ def _fill_polygon(mask: np.ndarray, points: list, value: int) -> None:
 
 def convert_one(json_path: Path, label2id: dict[str, int],
                 ignore: set[str],
-                priority: dict[str, int]) -> tuple[np.ndarray, np.ndarray]:
+                priority: dict[str, int]) -> tuple[np.ndarray, np.ndarray, int]:
+    """Return (image, mask, n_kept_shapes). n_kept_shapes == 0 → background sample."""
     with open(json_path, encoding="utf-8") as f:
         ann = json.load(f)
 
@@ -112,7 +113,7 @@ def convert_one(json_path: Path, label2id: dict[str, int],
         raise FileNotFoundError(f"No image found for {json_path.name}")
 
     image = np.array(Image.open(img_path).convert("RGB"))
-    return image, mask
+    return image, mask, len(shapes)
 
 
 # ── colorize ──────────────────────────────────────────────────────────────────
@@ -175,6 +176,7 @@ def run(
 
     # ── convert ───────────────────────────────────────────────────────────────
     counts = {"train": 0, "val": 0}
+    background_files: list[str] = []   # json exists but no kept polygons → background sample
     errors = []
 
     for i, jpath in enumerate(tqdm(json_files, desc="Converting")):
@@ -182,7 +184,7 @@ def run(
         out_name = jpath.stem + ".png"
 
         try:
-            image, mask = convert_one(jpath, label2id, ignore, priority)
+            image, mask, n_shapes = convert_one(jpath, label2id, ignore, priority)
         except Exception as e:
             errors.append((jpath.name, str(e)))
             continue
@@ -191,10 +193,16 @@ def run(
         Image.fromarray(mask ).save(dst / split / "masks"    / out_name)
         Image.fromarray(_colorize(mask)).save(dst / split / "colormap" / out_name)
         counts[split] += 1
+        if n_shapes == 0:
+            background_files.append(jpath.name)
 
     print(f"\nDone.")
     print(f"  train : {counts['train']} samples")
     print(f"  val   : {counts['val']} samples")
+    if background_files:
+        print(f"  background (json with no labels): {len(background_files)}")
+        for name in background_files:
+            print(f"    {name}")
     print(f"  output: {dst.resolve()}")
 
     if errors:
@@ -202,7 +210,12 @@ def run(
         for name, msg in errors:
             print(f"  {name}: {msg}")
 
-    return {"train": counts["train"], "val": counts["val"], "errors": errors}
+    return {
+        "train": counts["train"],
+        "val": counts["val"],
+        "background": len(background_files),
+        "errors": errors,
+    }
 
 
 def main():
