@@ -65,14 +65,24 @@ def convert_one(
         label = shape["label"]
         if label in ignore or label not in label2id:
             continue
-        if shape.get("shape_type") != "polygon":
-            continue
-
+        shape_type = shape.get("shape_type")
         class_id = label2id[label]
         pts = np.array(shape["points"], dtype=np.float32)
-        norm = pts / np.array([w, h], dtype=np.float32)
-        coords = " ".join(f"{v:.6f}" for v in norm.flatten())
-        lines.append(f"{class_id} {coords}")
+
+        if shape_type == "polygon":
+            norm = pts / np.array([w, h], dtype=np.float32)
+            coords = " ".join(f"{v:.6f}" for v in norm.flatten())
+            lines.append(f"{class_id} {coords}")
+        elif shape_type == "rectangle":
+            x_min, y_min = pts.min(axis=0)
+            x_max, y_max = pts.max(axis=0)
+            cx = ((x_min + x_max) / 2) / w
+            cy = ((y_min + y_max) / 2) / h
+            bw = (x_max - x_min) / w
+            bh = (y_max - y_min) / h
+            lines.append(f"{class_id} {cx:.6f} {cy:.6f} {bw:.6f} {bh:.6f}")
+        else:
+            continue
 
     for ext in (".bmp", ".png", ".jpg", ".jpeg", ".tif", ".tiff"):
         candidate = json_path.with_suffix(ext)
@@ -189,10 +199,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Convert LabelMe → YOLO instance-seg dataset for RFDETR"
     )
-    parser.add_argument("--src", default=r"D:\Nghia\TrainDataset\MetalSheet\Point-InstanceSeg")
-    parser.add_argument("--dst", default=r"D:\Nghia\TrainDataset\MetalSheet\Point-InstanceSeg_RFDETR")
+    parser.add_argument("--src", default=r"D:\temp\Yamaha_2026_06_17\Train")
+    parser.add_argument("--dst", default=r"D:\temp\Yamaha_2026_06_17\Train_RFDETR")
     parser.add_argument("--ignore",    nargs="*", default=[])
-    parser.add_argument("--val-ratio", type=float, default=0.15)
+    parser.add_argument("--val-ratio", type=float, default=0.1)
     parser.add_argument("--seed",      type=int,   default=42)
     args = parser.parse_args()
     run(args.src, args.dst, args.ignore, args.val_ratio, args.seed)

@@ -60,11 +60,33 @@ def _fmt_time(ts: float) -> str:
 
 
 def _find_checkpoint(folder: Path) -> tuple[str, float]:
-    for name in ("last.pt", "last.pth"):
-        candidates = list(folder.rglob(name))
-        if candidates:
-            p = max(candidates, key=lambda x: x.stat().st_mtime)
-            return name, p.stat().st_mtime
+    """Locate the most recent checkpoint/export produced by any supported model.
+
+    Preference order (highest → lowest):
+      1. Best checkpoints (rfdetr: checkpoint_best_*.pth; yolo: best.pt/best.pth)
+      2. Last checkpoints (rfdetr: last.ckpt; yolo: last.pt/last.pth)
+      3. Exported inference files (inference_model*.onnx)
+    Returns the file name (basename) and its mtime; empty string if none found.
+    """
+    tiers = (
+        ("checkpoint_best_total.pth", "checkpoint_best_regular.pth",
+         "checkpoint_best_ema.pth", "best.pt", "best.pth"),
+        ("last.ckpt", "last.pt", "last.pth"),
+        ("inference_model_best.onnx", "inference_model_last.onnx",
+         "inference_model.onnx"),
+    )
+    for tier in tiers:
+        best_path, best_ts = None, 0.0
+        for name in tier:
+            for p in folder.rglob(name):
+                try:
+                    ts = p.stat().st_mtime
+                except OSError:
+                    continue
+                if ts > best_ts:
+                    best_ts, best_path = ts, p
+        if best_path is not None:
+            return best_path.name, best_ts
     return "", 0.0
 
 
