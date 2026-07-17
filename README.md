@@ -36,6 +36,8 @@ python -m venv venv
 venv\Scripts\activate
 
 pip install -r requirements.txt
+
+pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu129 --force-reinstall
 ```
 
 ## Usage
