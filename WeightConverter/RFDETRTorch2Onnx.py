@@ -31,11 +31,11 @@ from rfdetr import (
 
 
 # ── Config ────────────────────────────────────────────────────────────────
-CKPT_PATH    = r"D:\Nghia\Python-Workspace\MemoTrainer\TrainResult\MetalSheetC-Clip_20260610_163835\last.ckpt"
+CKPT_PATH    = r"D:\Nghia\Python-Workspace\MemoTrainer\TrainResult\WooriTech_20260717_105046\last - Copy.ckpt"
 ARCH         = "RFDETRNano"   # RFDETRNano | RFDETRSmall | RFDETRMedium | RFDETRLarge
 TASK         = "detect"       # detect | segment
 NUM_CLASSES  = 2
-IMAGE_SIZE   = 384            # phải chia hết cho 32
+IMAGE_SIZE   = 512            # phải chia hết cho 32
 OUTPUT_DIR   = None           # None -> cùng folder với .ckpt
 
 
