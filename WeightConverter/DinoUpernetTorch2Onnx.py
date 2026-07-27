@@ -20,11 +20,6 @@ import torch
 import torch.nn as nn
 
 
-# -- Cho phep import memolib --
-MEMOLIB_ROOT = r"D:\Nghia\Python-Workspace\MemoLibV2"
-if MEMOLIB_ROOT not in sys.path:
-    sys.path.insert(0, MEMOLIB_ROOT)
-
 from MemoLib.Model.DinoUperNet.DinoUperNet import DinoUperNet, _ONNXWrapper
 from MemoLib.Model.BaseModel.eSegmentationModel import eDinoUperNetModel
 

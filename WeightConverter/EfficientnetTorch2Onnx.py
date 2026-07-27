@@ -17,12 +17,6 @@ from pathlib import Path
 
 import torch
 
-
-# -- Cho phep import memolib --
-MEMOLIB_ROOT = r"D:\Nghia\Python-Workspace\MemoLibV2"
-if MEMOLIB_ROOT not in sys.path:
-    sys.path.insert(0, MEMOLIB_ROOT)
-
 from MemoLib.Model.Efficientnet import EfficientNet
 from MemoLib.Model.BaseModel.eClassificationModel import eEfficientNetModel
 

@@ -48,7 +48,6 @@ def _force_light_palette(app: QApplication):
     p.setColor(QPalette.ColorRole.BrightText,      QColor("#111111"))
     app.setPalette(p)
 
-
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName("MemoLib Trainer")

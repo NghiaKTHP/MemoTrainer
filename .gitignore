@@ -21,6 +21,7 @@ build/
 MemoTrainer.spec
 
 *.pt
+*.pth
 # Runtime output
 Logs/
 Configs/
