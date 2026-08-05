@@ -1,7 +1,7 @@
 TASK_MODELS = {
     "Classify": ["PPLCNet", "YOLO-Cls", "EfficientNet"],
     "Detect":   ["YOLO-Det", "RFDETR-Det"],
-    "Segment":  ["YOLO-Seg", "DinoUperNet", "DinoV3ConvNextUperNet", "HRNet", "RFDETR-Seg"],
+    "Segment":  ["YOLO-Seg", "DinoUperNet", "DinoV3ConvNextUperNet", "DinoV3ConvNextMask2Former", "HRNet", "RFDETR-Seg"],
     "Anomaly":  ["DinomalyV2"],
 }
 
@@ -80,6 +80,15 @@ MODEL_INFO = {
         "model_class":      "DinoV3ConvNextUperNet",
         "arch_enum_module": "MemoLib.Model.BaseModel.eSegmentationModel",
         "arch_enum_class":  "eDinoV3ConvNextUperNetModel",
+        "fixed_fields":     {},
+    },
+    "DinoV3ConvNextMask2Former": {
+        "config_module":    "MemoLib.Model.DinoV3ConvNextMask2Former.DinoV3ConvNextMask2FormerConfig",
+        "config_class":     "TrainingConfig",
+        "model_module":     "MemoLib.Model.DinoV3ConvNextMask2Former.DinoV3ConvNextMask2Former",
+        "model_class":      "DinoV3ConvNextMask2Former",
+        "arch_enum_module": "MemoLib.Model.BaseModel.eSegmentationModel",
+        "arch_enum_class":  "eDinoV3ConvNextMask2FormerModel",
         "fixed_fields":     {},
     },
     "HRNet": {
