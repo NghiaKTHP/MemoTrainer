@@ -1,8 +1,9 @@
 TASK_MODELS = {
-    "Classify": ["PPLCNet", "YOLO-Cls", "EfficientNet"],
-    "Detect":   ["YOLO-Det", "RFDETR-Det"],
-    "Segment":  ["YOLO-Seg", "DinoUperNet", "DinoV3ConvNextUperNet", "DinoV3ConvNextMask2Former", "HRNet", "RFDETR-Seg"],
-    "Anomaly":  ["DinomalyV2"],
+    "Classify":  ["PPLCNet", "YOLO-Cls", "EfficientNet"],
+    "Detect":    ["YOLO-Det", "RFDETR-Det"],
+    "Segment":   ["YOLO-Seg", "DinoUperNet", "DinoV3ConvNextUperNet", "DinoV3ConvNextMask2Former", "HRNet", "RFDETR-Seg"],
+    "Anomaly":   ["DinomalyV2"],
+    "Recognize": ["PPOCRv5ServerRec", "PPOCRv5MobileRec"],
 }
 
 # model_module / model_class must match actual class names in memolib
@@ -82,15 +83,6 @@ MODEL_INFO = {
         "arch_enum_class":  "eDinoV3ConvNextUperNetModel",
         "fixed_fields":     {},
     },
-    "DinoV3ConvNextMask2Former": {
-        "config_module":    "MemoLib.Model.DinoV3ConvNextMask2Former.DinoV3ConvNextMask2FormerConfig",
-        "config_class":     "TrainingConfig",
-        "model_module":     "MemoLib.Model.DinoV3ConvNextMask2Former.DinoV3ConvNextMask2Former",
-        "model_class":      "DinoV3ConvNextMask2Former",
-        "arch_enum_module": "MemoLib.Model.BaseModel.eSegmentationModel",
-        "arch_enum_class":  "eDinoV3ConvNextMask2FormerModel",
-        "fixed_fields":     {},
-    },
     "HRNet": {
         "config_module":    "MemoLib.Model.HRNet.HRNetConfig",
         "config_class":     "TrainingConfig",
@@ -116,6 +108,24 @@ MODEL_INFO = {
         "model_class":      "DinomalyModel",
         "arch_enum_module": "MemoLib.Model.BaseModel.eAnomalyModel",
         "arch_enum_class":  "eDinomalyModel",
+        "fixed_fields":     {},
+    },
+    "PPOCRv5ServerRec": {
+        "config_module":    "MemoLib.Model.PPOCRv5ServerRec.PPOCRv5ServerRecConfig",
+        "config_class":     "TrainingConfig",
+        "model_module":     "MemoLib.Model.PPOCRv5ServerRec.PPOCRv5ServerRecModel",
+        "model_class":      "PPOCRv5ServerRec",
+        "arch_enum_module": "MemoLib.Model.BaseModel.eRecognitionModel",
+        "arch_enum_class":  "ePPOCRv5ServerRecModel",
+        "fixed_fields":     {},
+    },
+    "PPOCRv5MobileRec": {
+        "config_module":    "MemoLib.Model.PPOCRv5MobileRec.PPOCRv5MobileRecConfig",
+        "config_class":     "TrainingConfig",
+        "model_module":     "MemoLib.Model.PPOCRv5MobileRec.PPOCRv5MobileRecModel",
+        "model_class":      "PPOCRv5MobileRec",
+        "arch_enum_module": "MemoLib.Model.BaseModel.eRecognitionModel",
+        "arch_enum_class":  "ePPOCRv5MobileRecModel",
         "fixed_fields":     {},
     },
 }

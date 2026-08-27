@@ -85,8 +85,10 @@ class TrainingWorker(QThread):
             model_mod = importlib.import_module(info["model_module"])
             model_cls = getattr(model_mod, info["model_class"])
 
-            arch_mod = importlib.import_module(info["arch_enum_module"])
-            arch_enum_cls = getattr(arch_mod, info["arch_enum_class"])
+            arch_enum_cls = None
+            if info.get("arch_enum_module") and info.get("arch_enum_class"):
+                arch_mod = importlib.import_module(info["arch_enum_module"])
+                arch_enum_cls = getattr(arch_mod, info["arch_enum_class"], None)
 
             cfg = cfg_cls()
 

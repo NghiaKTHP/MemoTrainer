@@ -5,10 +5,11 @@ from PyQt6.QtWidgets import (QButtonGroup, QFrame, QLabel, QPushButton,
 from .constants import TASK_MODELS
 
 _TASK_ICONS = {
-    "Classify": "🏷",
-    "Detect":   "🎯",
-    "Segment":  "✂",
-    "Anomaly":  "🔍",
+    "Classify":  "🏷",
+    "Detect":    "🎯",
+    "Segment":   "✂",
+    "Anomaly":   "🔍",
+    "Recognize": "🔤",
 }
 
 _SIDEBAR_STYLE = """

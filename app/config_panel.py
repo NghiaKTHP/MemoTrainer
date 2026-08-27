@@ -383,8 +383,10 @@ class ConfigPanel(QWidget):
         try:
             cfg_mod = importlib.import_module(info["config_module"])
             cfg_cls = getattr(cfg_mod, info["config_class"])
-            arch_mod = importlib.import_module(info["arch_enum_module"])
-            arch_enum_cls = getattr(arch_mod, info["arch_enum_class"])
+            arch_enum_cls = None
+            if info.get("arch_enum_module") and info.get("arch_enum_class"):
+                arch_mod = importlib.import_module(info["arch_enum_module"])
+                arch_enum_cls = getattr(arch_mod, info["arch_enum_class"], None)
         except Exception as e:
             self._title_lbl.setText(f"Error loading config: {e}")
             return
@@ -398,15 +400,16 @@ class ConfigPanel(QWidget):
             except Exception:
                 pass
 
-        try:
-            default_arch_name = info.get("default_arch")
-            if default_arch_name:
-                first_arch = arch_enum_cls[default_arch_name]
-            else:
-                first_arch = list(arch_enum_cls)[0]
-            setattr(self._cfg_instance, "Architecture", first_arch)
-        except Exception:
-            pass
+        if arch_enum_cls is not None:
+            try:
+                default_arch_name = info.get("default_arch")
+                if default_arch_name:
+                    first_arch = arch_enum_cls[default_arch_name]
+                else:
+                    first_arch = list(arch_enum_cls)[0]
+                setattr(self._cfg_instance, "Architecture", first_arch)
+            except Exception:
+                pass
 
         self._default_cfg = config_to_dict(self._cfg_instance)
         self._title_lbl.setText(f"  {model_name}")
