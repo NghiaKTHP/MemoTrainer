@@ -1,19 +1,19 @@
 """
-DinoV3ConvNextUperNet inference script (semantic segmentation).
+DinoV3DPT inference script (semantic segmentation).
 
-Loads a trained DinoV3ConvNextUperNet checkpoint (.pth) via memolib and runs
-prediction on an image, folder of images, or video. Saves annotated overlays
-and optionally raw class-index mask PNGs + JSON summary.
+Loads a trained DinoV3DPT checkpoint (.pth) via memolib and runs prediction on
+an image, folder of images, or video. Saves annotated overlays and optionally
+raw class-index mask PNGs + JSON summary.
 
 Usage:
-    python InferConvNextUperNet.py --weights TrainResult\Run_xxx\Weights\best.pth ^
-                                   --classes TrainResult\Run_xxx\classes.txt ^
-                                   --source  D:\\images ^
-                                   --out     D:\\images_out ^
-                                   --arch    CONVNEXT_SMALL ^
-                                   --image-size 512
+    python InferDinoV3DPT.py --weights TrainResult\Run_xxx\Weights\best.pth ^
+                             --classes TrainResult\Run_xxx\classes.txt ^
+                             --source  D:\\images ^
+                             --out     D:\\images_out ^
+                             --arch    VIT_BASE ^
+                             --image-size 512
 
-Architectures: CONVNEXT_TINY | CONVNEXT_SMALL | CONVNEXT_BASE | CONVNEXT_LARGE
+Architectures: VIT_SMALL | VIT_SMALL_PLUS | VIT_BASE | VIT_LARGE | VIT_HUGE_PLUS
 """
 
 import argparse
@@ -26,15 +26,16 @@ import torch
 import torch.nn.functional as F
 from PIL import Image
 
-from MemoLib.Model.DinoV3ConvNextUperNet.DinoV3ConvNextUperNet import DinoV3ConvNextUperNet
-from MemoLib.Model.BaseModel.eSegmentationModel import eDinoV3ConvNextUperNetModel
+from MemoLib.Model.DinoV3DPT.DinoV3DPT import DinoV3DPT
+from MemoLib.Model.BaseModel.eSegmentationModel import eDinoV3DPTModel
 
 
 _ARCH_MAP = {
-    "CONVNEXT_TINY":  eDinoV3ConvNextUperNetModel.CONVNEXT_TINY,
-    "CONVNEXT_SMALL": eDinoV3ConvNextUperNetModel.CONVNEXT_SMALL,
-    "CONVNEXT_BASE":  eDinoV3ConvNextUperNetModel.CONVNEXT_BASE,
-    "CONVNEXT_LARGE": eDinoV3ConvNextUperNetModel.CONVNEXT_LARGE,
+    "VIT_SMALL":      eDinoV3DPTModel.VIT_SMALL,
+    "VIT_SMALL_PLUS": eDinoV3DPTModel.VIT_SMALL_PLUS,
+    "VIT_BASE":       eDinoV3DPTModel.VIT_BASE,
+    "VIT_LARGE":      eDinoV3DPTModel.VIT_LARGE,
+    "VIT_HUGE_PLUS":  eDinoV3DPTModel.VIT_HUGE_PLUS,
 }
 
 _IMG_EXTS = {".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff", ".webp"}
@@ -42,19 +43,27 @@ _VID_EXTS = {".mp4", ".avi", ".mov", ".mkv"}
 
 _IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 _IMAGENET_STD  = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+# ViT patch=16, DPT deepest reassemble scale = 0.5 → coarsest feature map ở H/32.
+# ImageSize phải chia hết cho 32 để tránh lệch pixel / gãy align_corners.
 _PATCH_STRIDE  = 32
 
 
 def load_model(weights: str, arch: str, num_classes: int, image_size: int,
-               decoder_channels: int, device: str | None) -> DinoV3ConvNextUperNet:
+               decoder_channels: int, head_channels: int, dropout: float,
+               readout_type: str, use_final_norm: bool,
+               device: str | None) -> DinoV3DPT:
     if arch not in _ARCH_MAP:
         raise ValueError(f"Unknown architecture '{arch}'. Expected one of {list(_ARCH_MAP)}")
 
-    inst = DinoV3ConvNextUperNet()
-    inst.cfg.Architecture     = _ARCH_MAP[arch]
-    inst.cfg.ImageSize        = image_size
-    inst.cfg.DecoderChannels  = decoder_channels
-    inst.ClassesNumber        = num_classes
+    inst = DinoV3DPT()
+    inst.cfg.Architecture                = _ARCH_MAP[arch]
+    inst.cfg.ImageSize                   = image_size
+    inst.cfg.DecoderChannels             = decoder_channels
+    inst.cfg.HeadChannels                = head_channels
+    inst.cfg.Dropout                     = dropout
+    inst.cfg.ReadoutType                 = readout_type
+    inst.cfg.UseFinalNormForIntermediates = use_final_norm
+    inst.ClassesNumber                   = num_classes
     if device:
         inst.Device = torch.device(device)
 
@@ -89,11 +98,13 @@ def _preprocess(img_bgr: np.ndarray, image_size: int) -> torch.Tensor:
 
 
 @torch.no_grad()
-def _predict_mask(model_inst: DinoV3ConvNextUperNet, img_bgr: np.ndarray,
+def _predict_mask(model_inst: DinoV3DPT, img_bgr: np.ndarray,
                   image_size: int) -> np.ndarray:
     h, w = img_bgr.shape[:2]
     tensor = _preprocess(img_bgr, image_size).to(model_inst.Device)
     logits = model_inst.model(tensor)
+    if isinstance(logits, (tuple, list)):
+        logits = logits[0]
     logits = F.interpolate(logits, size=(h, w), mode="bilinear", align_corners=False)
     return logits.argmax(dim=1).squeeze(0).to(torch.uint8).cpu().numpy()
 
@@ -214,9 +225,13 @@ def _load_class_names(classes_file: str | None) -> list[str] | None:
     return [ln.strip() for ln in p.read_text(encoding="utf-8").splitlines() if ln.strip()]
 
 
-def run(weights: str, source: str, out: str, arch: str = "CONVNEXT_SMALL",
+def run(weights: str, source: str, out: str, arch: str = "VIT_BASE",
         image_size: int = 512,
-        decoder_channels: int = 512,
+        decoder_channels: int = 256,
+        head_channels: int = 32,
+        dropout: float = 0.1,
+        readout_type: str = "project",
+        use_final_norm: bool = True,
         classes_file: str | None = None,
         class_names: list[str] | None = None,
         num_classes: int | None = None,
@@ -238,9 +253,12 @@ def run(weights: str, source: str, out: str, arch: str = "CONVNEXT_SMALL",
     palette = _build_palette(num_classes)
 
     model_inst = load_model(weights, arch, num_classes, image_size,
-                            decoder_channels, device)
+                            decoder_channels, head_channels, dropout,
+                            readout_type, use_final_norm, device)
     print(f"Loaded {arch} | ImageSize={image_size} | Classes={num_classes} "
-          f"| DecoderChannels={decoder_channels} | Device={model_inst.Device}")
+          f"| DecoderCh={decoder_channels} | HeadCh={head_channels} "
+          f"| Readout={readout_type} | FinalNorm={use_final_norm} "
+          f"| Device={model_inst.Device}")
 
     images, videos = _collect_inputs(Path(source))
     print(f"Found {len(images)} image(s), {len(videos)} video(s) in {source}")
@@ -261,17 +279,27 @@ def run(weights: str, source: str, out: str, arch: str = "CONVNEXT_SMALL",
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="DinoV3ConvNextUperNet inference")
-    p.add_argument("--weights",     default=r"E:\TempData\LG_FPCB\best.pth", help="Path to .pth checkpoint")
-    p.add_argument("--source",      default=r"C:\Users\PC\Downloads\1", help="Image / folder / video path")
+    p = argparse.ArgumentParser(description="DinoV3DPT inference")
+    p.add_argument("--weights",     default=r"D:\Nghia\Python-Workspace\MemoTrainer\TrainResult\LGFPCBV3_20260829_093416\Weights\best.pth", help="Path to .pth checkpoint")
+    p.add_argument("--source",      default=r"E:\TempData\LG_FPCB\temp", help="Image / folder / video path")
     p.add_argument("--out",         default=r"E:\TempData\LG_FPCB\temp_dpt")
-    p.add_argument("--arch",        default="CONVNEXT_LARGE",
+    p.add_argument("--arch",        default="VIT_BASE",
                    choices=list(_ARCH_MAP.keys()))
-    p.add_argument("--image-size",  type=int, default=800,
-                   help="Input resolution (must match training; will be rounded "
-                        "up to multiple of 32 by the model)")
+    p.add_argument("--image-size",  type=int, default=640,
+                   help="Input resolution (must match training; rounded up "
+                        "to multiple of 32 by the model)")
     p.add_argument("--decoder-channels", type=int, default=512,
-                   help="UperNet decoder channels (must match training)")
+                   help="DPT reassemble/fusion channels (must match training)")
+    p.add_argument("--head-channels", type=int, default=32,
+                   help="DPT output head channels (must match training)")
+    p.add_argument("--dropout",     type=float, default=0.1,
+                   help="Head dropout (must match training)")
+    p.add_argument("--readout-type", default="project",
+                   choices=["project", "ignore"],
+                   help="ViT DPT readout strategy (must match training)")
+    p.add_argument("--no-final-norm", action="store_true",
+                   help="Disable final LayerNorm on intermediate features "
+                        "(must match training)")
     p.add_argument("--classes",     default=None,
                    help="Path to classes.txt (one class per line)")
     p.add_argument("--class-names", nargs="*", default=["Background", "Copper", "Tin"],
@@ -288,7 +316,9 @@ def main() -> None:
     args = p.parse_args()
 
     run(args.weights, args.source, args.out, args.arch, args.image_size,
-        args.decoder_channels, args.classes, args.class_names, args.num_classes,
+        args.decoder_channels, args.head_channels, args.dropout,
+        args.readout_type, not args.no_final_norm,
+        args.classes, args.class_names, args.num_classes,
         args.alpha, args.save_mask, args.json, args.device)
 
 
