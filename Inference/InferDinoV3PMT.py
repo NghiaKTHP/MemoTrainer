@@ -44,11 +44,19 @@ _ARCH_MAP = {
 _IMG_EXTS = {".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff", ".webp"}
 _VID_EXTS = {".mp4", ".avi", ".mov", ".mkv"}
 
+def _default_meta_weights_dir() -> Path:
+    # Project root = parent of Inference/. Training data-params default gốc là
+    # <cwd>/Weights/MetaWeights; nhưng infer chạy từ Inference/ nên default đó
+    # trỏ sai — resolve về root project.
+    return Path(__file__).resolve().parent.parent / "Weights" / "MetaWeights"
+
+
 def load_model(weights: str, arch: str, num_classes: int, image_size: int,
                num_queries: int, num_decoder_blocks: int,
                decoder_hidden_dim: int | None,
                masked_attn_enabled: bool,
                lateral_projection: str, residual_projection: bool,
+               meta_weights_dir: str | None,
                device: str | None) -> DinoV3PMT:
     if arch not in _ARCH_MAP:
         raise ValueError(f"Unknown architecture '{arch}'. Expected one of {list(_ARCH_MAP)}")
@@ -63,13 +71,35 @@ def load_model(weights: str, arch: str, num_classes: int, image_size: int,
     inst.cfg.LateralProjection   = lateral_projection
     inst.cfg.ResidualProjection  = residual_projection
     inst.ClassesNumber           = num_classes
+
+    # PMT strips backbone khi save (~backbone frozen). LoadWeight sẽ tải lại
+    # từ MetaWeightsDir; nếu thiếu → backbone random-init → dự đoán rác.
+    meta_dir = Path(meta_weights_dir) if meta_weights_dir else _default_meta_weights_dir()
+    inst.cfg.MetaWeightsDir = str(meta_dir.resolve())
+
     if device:
         inst.Device = torch.device(device)
+
+    if not Path(weights).exists():
+        raise FileNotFoundError(f"Weights file không tồn tại: {weights}")
 
     # LoadWeight tự đọc sidecar .json (nếu có) và override toàn bộ ModelParams
     # để khớp checkpoint (image_size, num_classes, num_queries, ...).
     # LoadWeight cũng tự .to(Device), không cần gọi lại.
     inst.LoadWeight(weights)
+
+    # Verify backbone pretrain thực sự đã load — LoadWeight chỉ log WARN rồi
+    # tiếp tục với backbone random, sinh ra mask rác không có lỗi rõ ràng.
+    pretrain_file = inst.cfg.get_pretrain_filename()
+    pretrain_path = meta_dir / pretrain_file
+    if not pretrain_path.exists():
+        raise FileNotFoundError(
+            f"DinoV3 pretrained backbone không tìm thấy: {pretrain_path}\n"
+            f"PMT frozen encoder → checkpoint không chứa backbone, cần Meta .pth "
+            f"để dựng lại. Đặt file vào folder trên hoặc truyền --meta-weights-dir "
+            f"trỏ tới folder chứa {pretrain_file}."
+        )
+
     inst.model.eval()
     return inst
 
@@ -220,6 +250,7 @@ def run(weights: str, source: str, out: str, arch: str = "VIT_BASE",
         masked_attn_enabled: bool = True,
         lateral_projection: str = "mlp",
         residual_projection: bool = True,
+        meta_weights_dir: str | None = None,
         classes_file: str | None = None,
         class_names: list[str] | None = None,
         num_classes: int | None = None,
@@ -243,7 +274,7 @@ def run(weights: str, source: str, out: str, arch: str = "VIT_BASE",
     model_inst = load_model(weights, arch, num_classes, image_size,
                             num_queries, num_decoder_blocks, decoder_hidden_dim,
                             masked_attn_enabled, lateral_projection,
-                            residual_projection, device)
+                            residual_projection, meta_weights_dir, device)
     print(f"Loaded {arch} | ImageSize={image_size} | Classes={num_classes} "
           f"| Queries={num_queries} | DecoderBlocks={num_decoder_blocks} "
           f"| HiddenDim={decoder_hidden_dim} | MaskedAttn={masked_attn_enabled} "
@@ -270,7 +301,7 @@ def run(weights: str, source: str, out: str, arch: str = "VIT_BASE",
 
 def main() -> None:
     p = argparse.ArgumentParser(description="DinoV3PMT inference")
-    p.add_argument("--weights",     default=r"D:\Nghia\Python-Workspace\MemoTrainer\TrainResult\LG_FPCBV3_20260831_083243\Weights\last.pth",
+    p.add_argument("--weights",     default=r"D:\temp\LGFPPCB\last.pth",
                    help="Path to .pth checkpoint")
     p.add_argument("--source",      default=r"E:\TempData\LG_FPCB\temp",
                    help="Image / folder / video path")
@@ -296,6 +327,11 @@ def main() -> None:
     p.add_argument("--no-residual-projection", action="store_true",
                    help="Disable residual projection on lateral features "
                         "(must match training)")
+    p.add_argument("--meta-weights-dir", default=None,
+                   help="Folder chứa DinoV3 pretrained .pth (dinov3_vits16_*.pth, "
+                        "dinov3_vitb16_*.pth, ...). Mặc định: "
+                        "<project_root>/Weights/MetaWeights. PMT frozen encoder "
+                        "cần Meta pretrain để dựng lại backbone khi infer.")
     p.add_argument("--classes",     default=None,
                    help="Path to classes.txt (one class per line)")
     p.add_argument("--class-names", nargs="*", default=["Background", "Copper", "Tin"],
@@ -314,7 +350,7 @@ def main() -> None:
     run(args.weights, args.source, args.out, args.arch, args.image_size,
         args.num_queries, args.num_decoder_blocks, args.decoder_hidden_dim,
         not args.no_masked_attn, args.lateral_projection,
-        not args.no_residual_projection,
+        not args.no_residual_projection, args.meta_weights_dir,
         args.classes, args.class_names, args.num_classes,
         args.alpha, args.save_mask, args.json, args.device)
 

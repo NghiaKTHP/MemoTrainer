@@ -1,7 +1,7 @@
 TASK_MODELS = {
     "Classify":  ["PPLCNet", "YOLO-Cls", "EfficientNet"],
     "Detect":    ["YOLO-Det", "RFDETR-Det"],
-    "Segment":   ["YOLO-Seg", "DinoUperNet", "DinoV3ConvNextUperNet", "DinoV3PMT", "HRNet", "RFDETR-Seg"],
+    "Segment":   ["YOLO-Seg", "DinoUperNet", "DinoV3ConvNextUperNet", "DinoV3PMT", "HRNet", "RFDETR-Seg", "FlashInternImageMask2Former"],
     "Anomaly":   ["DinomalyV2"],
     "Recognize": ["PPOCRv5ServerRec", "PPOCRv5MobileRec"],
 }
@@ -109,6 +109,15 @@ MODEL_INFO = {
         "arch_enum_module": "MemoLib.Model.BaseModel.eDetectionModel",
         "arch_enum_class":  "eRFDetrDetectionModel",
         "fixed_fields":     {"TaskType": "segment"},
+    },
+    "FlashInternImageMask2Former": {
+        "config_module":    "MemoLib.Model.FlashInternImageMask2Former.FlashInternImageMask2FormerConfig",
+        "config_class":     "TrainingConfig",
+        "model_module":     "MemoLib.Model.FlashInternImageMask2Former.FlashInternImageMask2Former",
+        "model_class":      "FlashInternImageMask2Former",
+        "arch_enum_module": "MemoLib.Model.BaseModel.eSegmentationModel",
+        "arch_enum_class":  "eFlashInternImageMask2FormerModel",
+        "fixed_fields":     {},
     },
     "DinomalyV2": {
         "config_module":    "MemoLib.Model.Dinomaly.DinomalyConfig",
